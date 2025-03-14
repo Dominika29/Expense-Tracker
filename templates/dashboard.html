@@ -11,7 +11,7 @@
         <form action="{{ url_for('add_expense') }}" method="post" class="mb-4">
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount</label>
-                <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+                <input type="number" step="0.01" class="form-control" id="amount" name="amount" required min="0">
             </div>
             <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
@@ -20,10 +20,16 @@
             <div class="mb-3">
                 <label for="category" class="form-label">Category</label>
                 <select class="form-control" id="category" name="category_id" required>
+                    <option value="" disabled selected>-- Select a category --</option>
                     {% for category in categories %}
                         <option value="{{ category.id }}">{{ category.name }}</option>
                     {% endfor %}
-                </select>
+                    <option value="new">Add new category...</option>
+                </select>                
+            </div>
+            <div class="mb-3" id="newCategoryField" style="display: none;">
+                <label for="new_category" class="form-label">New Category</label>
+                <input type="text" class="form-control" id="new_category" name="new_category">
             </div>
             <div class="mb-3">
                 <label for="date" class="form-label">Date</label>
@@ -54,5 +60,15 @@
         </table>
         <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
     </div>
+    <script>
+        document.getElementById('category').addEventListener('change', function() {
+            const newCategoryField = document.getElementById('newCategoryField');
+            if (this.value === 'new') {
+                newCategoryField.style.display = 'block';
+            } else {
+                newCategoryField.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

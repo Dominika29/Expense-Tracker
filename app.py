@@ -69,9 +69,28 @@ def add_expense():
     description = request.form['description']
     category_id = request.form['category_id']
     date = request.form['date']
+    new_category = request.form.get('new_category')
     
     conn = get_db_connection()
+
     try:
+        if category_id == 'new' and new_category:
+
+            existing_category = conn.execute(
+                'SELECT id FROM categories WHERE name = ? AND user_id = ?',
+                (new_category, user_id)
+            ).fetchone()
+
+            if existing_category:
+                return redirect(url_for('dashboard'))
+            
+            cursor = conn.execute(
+                'INSERT INTO categories (name, user_id) VALUES(?, ?)',
+                (new_category, user_id)
+            )
+            conn.commit()
+            category_id = cursor.lastrowid
+            
         conn.execute(
             'INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES (?, ?, ?, ?, ?)',
             (user_id, category_id, amount, description, date)
