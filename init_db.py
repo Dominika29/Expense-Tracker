@@ -1,4 +1,5 @@
 import sqlite3
+from werkzeug.security import generate_password_hash
 
 connection = sqlite3.connect('expense_tracker.db')
 
@@ -8,8 +9,10 @@ with open('expense_log.sql') as f:
 
 cur = connection.cursor()
 
+hashed_password = generate_password_hash('hashed_password_123')
+
 cur.execute("INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
-            ('admin', 'hashed_password_123', 'admin@example.com'))
+            ('admin', hashed_password, 'admin@example.com'))
 
 user_id = cur.lastrowid
 
@@ -31,3 +34,5 @@ cur.execute("INSERT INTO expenses (user_id, category_id, amount, description, da
 
 connection.commit()
 connection.close()
+
+print("Database initialized successfully!")
