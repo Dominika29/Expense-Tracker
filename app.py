@@ -55,7 +55,22 @@ def register():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    if 'user_id' not in session:
+        flash('Please log in to access the dashboard.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    conn = get_db_connection()
+    expenses = conn.execute('''
+        SELECT expenses.id, expenses.amount, expenses.description, expenses.date, 
+               categories.name AS category
+        FROM expenses
+        JOIN categories ON expenses.category_id = categories.id
+        WHERE expenses.user_id = ?
+    ''', (user_id,)).fetchall()
+    
+    conn.close()
+    return render_template('dashboard.html',expenses=expenses)
 
 if __name__ == '__main__':
     app.run(debug=True)
