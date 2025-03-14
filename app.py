@@ -47,11 +47,42 @@ def register():
         )
         conn.commit()
         flash('Registration successful!', 'success')
-    except sqlite3.IntegrityError:
-        flash('Username or email already exists', 'error')
+    except sqlite3.IntegrityError as e:
+        if 'UNIQUE constraint failed: users.email' in str(e):
+            flash('Email already exists', 'error')
+        elif 'UNIQUE constraint failed: users.username' in str(e):
+            flash('Username already exists', 'error')
+        else:
+            flash('An error occurred during registration.', 'error')
     finally:
         conn.close()
     return redirect(url_for('index'))
+
+@app.route('/add_expense', methods=['POST'])
+def add_expense():
+    if 'user_id' not in session:
+        flash('Please log in to add an expense.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    amount = request.form['amount']
+    description = request.form['description']
+    category_id = request.form['category_id']
+    date = request.form['date']
+    
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            'INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES (?, ?, ?, ?, ?)',
+            (user_id, category_id, amount, description, date)
+        )
+        conn.commit()
+        flash('Expense added successfully!', 'success')
+    except sqlite3.IntegrityError:
+        flash('Invalid category or user', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('dashboard'))
 
 @app.route('/dashboard')
 def dashboard():
@@ -61,6 +92,7 @@ def dashboard():
     
     user_id = session['user_id']
     conn = get_db_connection()
+
     expenses = conn.execute('''
         SELECT expenses.id, expenses.amount, expenses.description, expenses.date, 
                categories.name AS category
@@ -69,8 +101,13 @@ def dashboard():
         WHERE expenses.user_id = ?
     ''', (user_id,)).fetchall()
     
+    categories = conn.execute('SELECT * FROM categories WHERE user_id = ?', (user_id,)).fetchall()
+    print("Expenses:", expenses)
+    print("Categories:", categories)
+
     conn.close()
-    return render_template('dashboard.html',expenses=expenses)
+    return render_template('dashboard.html',expenses=expenses, categories=categories)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
