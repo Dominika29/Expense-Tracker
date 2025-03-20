@@ -17,11 +17,25 @@
     {% endfor %}
   {% endif %}
 {% endwith %}
-    <div class="container mt-5">
-        <h1>Welcome to Expense Tracker</h1>
-        <div class="row">
-            <div class="col-md-6">
-                <h2>Login</h2>
+
+<header>
+    <h1>Expense Tracker</h1>
+    <nav>
+        <button id="menu-toggle">☰ Menu</button>
+        <ul id="menu">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+</header>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Formularz logowania -->
+            <div id="login-container" class="form-container">
+                <h2 class="form-header">Login</h2>
                 <form action="{{ url_for('login') }}" method="post">
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
@@ -31,11 +45,14 @@
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="submit" class="btn btn-login">Login</button>
                 </form>
+                <button id="switch-to-register" class="btn btn-switch">Don't have an account? Register</button>
             </div>
-            <div class="col-md-6">
-                <h2>Register</h2>
+
+            <!-- Formularz rejestracji -->
+            <div id="register-container" class="form-container" style="display: none;">
+                <h2 class="form-header">Register</h2>
                 <form action="{{ url_for('register') }}" method="post">
                     <div class="mb-3">
                         <label for="new_username" class="form-label">Username</label>
@@ -49,11 +66,14 @@
                         <label for="new_email" class="form-label">Email</label>
                         <input type="email" class="form-control" id="new_email" name="new_email" required>
                     </div>
-                    <button type="submit" class="btn btn-success">Register</button>
+                    <button type="submit" class="btn btn-login">Register</button>
                 </form>
+                <button id="switch-to-login" class="btn btn-switch">Already have an account? Login</button>
             </div>
         </div>
     </div>
+</div>
+
 <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -70,7 +90,29 @@
         </div>
     </div>
 </div>
+
 <script>
+// menu
+document.getElementById('menu-toggle').addEventListener('click', function() {
+            const menu = document.getElementById('menu');
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+            }
+        });
+
+    // Przełączanie między formularzami
+    document.getElementById('switch-to-register').addEventListener('click', function() {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('register-container').style.display = 'block';
+    });
+
+    document.getElementById('switch-to-login').addEventListener('click', function() {
+        document.getElementById('register-container').style.display = 'none';
+        document.getElementById('login-container').style.display = 'block';
+    });
+
     function showModal(message) {
             console.log("Showing modal with message:", message);
             const modalMessage = document.getElementById('modalMessage');
