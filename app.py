@@ -127,6 +127,33 @@ def dashboard():
     conn.close()
     return render_template('dashboard.html',expenses=expenses, categories=categories)
 
+@app.route('/delete_expense/<int:expense_id>', methods=['POST'])
+def delete_expense(expense_id):
+    if 'user_id' not in session:
+        flash('Please log in to delete an expense.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    try:
+        expense = conn.execute(
+            'SELECT * FROM expenses WHERE id = ? AND user_id = ?',
+            (expense_id, user_id)
+        ).fetchone()
+
+        if expense:
+            conn.execute('DELETE FROM expenses WHERE id = ?', (expense_id,))
+            conn.commit()
+            flash('Expense deleted successfully!', 'success')
+        else:
+            flash('Expense not found or you do not have permission to delete it.', 'error')
+    except sqlite3.Error as e:
+        flash('An error occurred while deleting the expense.', 'error')
+    finally:
+        conn.close()
+
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)

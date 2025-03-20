@@ -21,9 +21,8 @@
 <header>
     <h1>Expense Tracker</h1>
     <nav>
-        <button id="menu-toggle">☰ Menu</button>
-        <ul id="menu">
-            <li><a href="#">Home</a></li>
+        <ul class="main-menu">
+            <li><a href="{{ url_for('index') }}">Log out</a></li>
             <li><a href="#">About</a></li>
             <li><a href="#">Services</a></li>
             <li><a href="#">Contact</a></li>
@@ -92,16 +91,6 @@
 </div>
 
 <script>
-// menu
-document.getElementById('menu-toggle').addEventListener('click', function() {
-            const menu = document.getElementById('menu');
-            if (menu.style.display === 'block') {
-                menu.style.display = 'none';
-            } else {
-                menu.style.display = 'block';
-            }
-        });
-
     // Przełączanie między formularzami
     document.getElementById('switch-to-register').addEventListener('click', function() {
         document.getElementById('login-container').style.display = 'none';

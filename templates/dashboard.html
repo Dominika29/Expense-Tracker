@@ -2,11 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Your Expenses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 <body>
-    <div class="container">
+    <header>
+        <h1>Expense Tracker</h1>
+        <nav>
+            <ul class="main-menu">
+                <li><a href="{{ url_for('index') }}">Log out</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Services</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="dashboard-container">
         <h2>Your Expenses</h2>
         <form action="{{ url_for('add_expense') }}" method="post" class="mb-4">
             <div class="mb-3">
@@ -35,32 +48,63 @@
                 <label for="date" class="form-label">Date</label>
                 <input type="date" class="form-control" id="date" name="date" required>
             </div>
-            <button type="submit" class="btn btn-success">Add Expense</button>
+            <button type="submit" class="btn btn-login">Add Expense</button>
         </form>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for expense in expenses %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>{{ expense.category }}</td>
-                        <td>{{ expense.description }}</td>
-                        <td>{{ expense.date }}</td>
-                        <td>{{ expense.amount }}</td>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Action</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.category }}</td>
+                            <td>{{ expense.description }}</td>
+                            <td>{{ expense.date }}</td>
+                            <td>{{ expense.amount }}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm delete-btn" data-expense-id="{{ expense.id }}">Delete</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{{ url_for('index') }}" class="btn btn-login">Back to Home</a>
     </div>
     <script>
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const expenseId = this.getAttribute('data-expense-id');
+                if (confirm('Are you sure you want to delete this expense?')) {
+                    fetch(`/delete_expense/${expenseId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Failed to delete the expense.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+            });
+        });
+
         document.getElementById('category').addEventListener('change', function() {
             const newCategoryField = document.getElementById('newCategoryField');
             if (this.value === 'new') {
