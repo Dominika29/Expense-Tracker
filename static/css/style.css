@@ -125,10 +125,6 @@ body {
     margin-bottom: 15px;
 }
 
-.btn-login:hover {
-    background: #ff4a6e !important;
-}
-
 .btn-switch {
     background: transparent;
     color: #ff6f91 !important;
@@ -177,17 +173,36 @@ form {
     background: #ff6f91;
 }
 
+.btn-edit, .btn-danger {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin: 0 2px;
+}
+
+.btn-edit {
+    background: #cf89a0 !important;
+    color: white !important;
+    border: none;
+}
+
+.btn-edit:hover {
+    background: #584b54 !important;
+}
+
 .btn-danger {
     background: #dc3545 !important;
     color: white !important;
     border: none;
-    border-radius: 5px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    width: 100%;
 }
 
 .btn-danger:hover {
-    background: #c82333 !important;
+    background: #870613 !important;
+}
+
+.btn-secondary {
+    margin-top: 10px;
+    width: 100%;
 }

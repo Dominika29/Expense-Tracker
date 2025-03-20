@@ -155,5 +155,49 @@ def delete_expense(expense_id):
 
     return redirect(url_for('dashboard'))
 
+@app.route('/edit_expense/<int:expense_id>', methods=['GET', 'POST'])
+def edit_expense(expense_id):
+    if 'user_id' not in session:
+        flash('Please log in to edit an expense.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    if request.method == 'POST':
+        amount = request.form['amount']
+        description = request.form['description']
+        category_id = request.form['category_id']
+        date = request.form['date']
+
+        try:
+            conn.execute(
+                'UPDATE expenses SET amount = ?, description = ?, category_id = ?, date = ? WHERE id = ? AND user_id = ?',
+                (amount, description, category_id, date, expense_id, user_id)
+            )
+            conn.commit()
+            flash('Expense updated successfully!', 'success')
+        except sqlite3.Error as e:
+            flash('An error occurred while updating the expense.', 'error')
+        finally:
+            conn.close()
+
+        return redirect(url_for('dashboard'))
+
+    else:
+        expense = conn.execute(
+            'SELECT * FROM expenses WHERE id = ? AND user_id = ?',
+            (expense_id, user_id)
+        ).fetchone()
+
+        categories = conn.execute('SELECT * FROM categories WHERE user_id = ?', (user_id,)).fetchall()
+        conn.close()
+
+        if expense:
+            return render_template('edit_expense.html', expense=expense, categories=categories)
+        else:
+            flash('Expense not found or you do not have permission to edit it.', 'error')
+            return redirect(url_for('dashboard'))
+        
 if __name__ == '__main__':
     app.run(debug=True)
