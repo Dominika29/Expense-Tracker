@@ -25,11 +25,11 @@
         <form action="{{ url_for('add_expense') }}" method="post" class="mb-4">
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount</label>
-                <input type="number" step="0.01" class="form-control" id="amount" name="amount" required min="0">
+                <input type="number" step="0.01" class="form-control" id="amount" name="amount" required min="0" max="10000">
             </div>
             <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
-                <input type="text" class="form-control" id="description" name="description" required>
+                <input type="text" class="form-control" id="description" name="description" required max="100">
             </div>
             <div class="mb-3">
                 <label for="category" class="form-label">Category</label>

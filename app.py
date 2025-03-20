@@ -65,7 +65,7 @@ def add_expense():
         return redirect(url_for('index'))
     
     user_id = session['user_id']
-    amount = request.form['amount']
+    amount = float(request.form['amount'])
     description = request.form['description']
     category_id = request.form['category_id']
     date = request.form['date']
@@ -118,6 +118,7 @@ def dashboard():
         FROM expenses
         JOIN categories ON expenses.category_id = categories.id
         WHERE expenses.user_id = ?
+        ORDER BY expenses.date ASC
     ''', (user_id,)).fetchall()
     
     categories = conn.execute('SELECT * FROM categories WHERE user_id = ?', (user_id,)).fetchall()
