@@ -112,7 +112,15 @@ def dashboard():
     user_id = session['user_id']
     conn = get_db_connection()
 
-    expenses = conn.execute('''
+    incomes = conn.execute('SELECT SUM(amount) AS total_income FROM income WHERE user_id = ?', (user_id,)).fetchone()
+    total_income = incomes['total_income'] or 0  
+
+    expenses = conn.execute('SELECT SUM(amount) AS total_expenses FROM expenses WHERE user_id = ?', (user_id,)).fetchone()
+    total_expenses = expenses['total_expenses'] or 0 
+
+    current_balance = total_income - total_expenses
+
+    expenses_list = conn.execute('''
         SELECT expenses.id, expenses.amount, expenses.description, expenses.date, 
                categories.name AS category
         FROM expenses
@@ -122,11 +130,15 @@ def dashboard():
     ''', (user_id,)).fetchall()
     
     categories = conn.execute('SELECT * FROM categories WHERE user_id = ?', (user_id,)).fetchall()
-    print("Expenses:", expenses)
-    print("Categories:", categories)
-
+    
     conn.close()
-    return render_template('dashboard.html',expenses=expenses, categories=categories)
+    
+    return render_template('dashboard.html', 
+                           expenses=expenses_list, 
+                           categories=categories, 
+                           total_income=total_income, 
+                           total_expenses=total_expenses, 
+                           current_balance=current_balance)
 
 @app.route('/delete_expense/<int:expense_id>', methods=['POST'])
 def delete_expense(expense_id):

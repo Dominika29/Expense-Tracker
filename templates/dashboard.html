@@ -21,6 +21,7 @@
         </nav>
     </header>
     <div class="dashboard-container">
+
         <div class="left-container">
             <h2>Add Income</h2>
             <form action="{{ url_for('add_income') }}" method="post" class="mb-4">
@@ -38,7 +39,9 @@
                 </div>
                 <button type="submit" class="btn btn-login">Add Income</button>
             </form>
-
+        </div>
+    
+        <div class="center-container">
             <h2>Your Expenses</h2>
             <form action="{{ url_for('add_expense') }}" method="post" class="mb-4">
                 <div class="mb-3">
@@ -69,7 +72,7 @@
                 </div>
                 <button type="submit" class="btn btn-login">Add Expense</button>
             </form>
-
+    
             <div class="table-container">
                 <table class="table">
                     <thead>
@@ -101,10 +104,10 @@
                     </tbody>
                 </table>
             </div>
-
+    
             <a href="{{ url_for('index') }}" class="btn btn-login">Back to Home</a>
         </div>
-
+    
         <div class="right-container">
             <h2>Balance</h2>
             <div class="balance-container">
@@ -144,7 +147,7 @@
         document.querySelectorAll('.btn-edit').forEach(button => {
              button.addEventListener('click', function() {
                  const expenseId = this.getAttribute('data-expense-id');
-                 window.location.href = `/edit_expense/${expenseId}`; // Przekieruj do strony edycji
+                 window.location.href = `/edit_expense/${expenseId}`;
               });
          });
         document.getElementById('category').addEventListener('change', function() {
@@ -155,6 +158,51 @@
                 newCategoryField.style.display = 'none';
             }
         });
+
+        async function updateBalance() {
+        try {
+            const response = await fetch('/get_balance');
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('total-income').textContent = data.total_income;
+                document.getElementById('total-expenses').textContent = data.total_expenses;
+                document.getElementById('current-balance').textContent = data.current_balance;
+            } else {
+                console.error('Failed to fetch balance:', data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const action = form.getAttribute('action');
+            const method = form.getAttribute('method');
+
+            try {
+                const response = await fetch(action, {
+                    method: method,
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    await updateBalance();
+                    window.location.reload();
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.error || 'An error occurred.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form.');
+            }
+        });
+    });
     </script>
 </body>
 </html>

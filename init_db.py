@@ -32,9 +32,9 @@ cur.execute("INSERT INTO expenses (user_id, category_id, amount, description, da
 cur.execute("INSERT INTO expenses (user_id, category_id, amount, description, date) VALUES (?, ?, ?, ?, ?)",
             (user_id, category_transport_id, 20.00, 'Bilet autobusowy', '2023-10-02'))
 
-cur.execute("INSERT INTO income (user_id, amount, description, date) VALUES (?, ?, ?, ?, ?)",
+cur.execute("INSERT INTO income (user_id, amount, description, date) VALUES (?, ?, ?, ?)",
             (user_id, 1000.00, 'Wynagrodzenie', '2024-10-25'))
-cur.execute("INSERT INTO income (user_id, amount, description, date) VALUES (?, ?, ?, ?, ?)",
+cur.execute("INSERT INTO income (user_id, amount, description, date) VALUES (?, ?, ?, ?)",
             (user_id, 200.00, 'kieszonkowe', '2024-05-12'))
 
 connection.commit()
