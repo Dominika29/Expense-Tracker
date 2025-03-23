@@ -26,3 +26,13 @@ CREATE TABLE expenses (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
+
+DROP TABLE IF EXISTS `income`;
+CREATE TABLE income (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    description TEXT,
+    date DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

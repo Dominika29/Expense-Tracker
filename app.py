@@ -200,5 +200,34 @@ def edit_expense(expense_id):
             flash('Expense not found or you do not have permission to edit it.', 'error')
             return redirect(url_for('dashboard'))
         
+@app.route('/add_income', methods=['POST'])
+def add_income():
+    if 'user_id' not in session:
+        flash('Please log in to add income.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    amount = float(request.form['income_amount'])
+    description = request.form['income_description']
+    date = request.form['income_date']
+
+    conn = get_db_connection()
+
+    try:
+        conn.execute(
+            'INSERT INTO income (user_id, amount, description, date) VALUES (?, ?, ?, ?)',
+            (user_id, amount, description, date)
+        )
+        conn.commit()
+        flash('Income added successfully!', 'success')
+    except sqlite3.Error as e:
+        flash('An error occurred while adding income.', 'error')
+    finally:
+        conn.close()
+
+    return redirect(url_for('dashboard'))
+
+
+        
 if __name__ == '__main__':
     app.run(debug=True)

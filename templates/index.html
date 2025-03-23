@@ -22,7 +22,7 @@
     <h1>Expense Tracker</h1>
     <nav>
         <ul class="main-menu">
-            <li><a href="{{ url_for('index') }}">Log out</a></li>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
             <li><a href="#">About</a></li>
             <li><a href="#">Services</a></li>
             <li><a href="#">Contact</a></li>
@@ -32,7 +32,6 @@
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <!-- Formularz logowania -->
             <div id="login-container" class="form-container">
                 <h2 class="form-header">Login</h2>
                 <form action="{{ url_for('login') }}" method="post">

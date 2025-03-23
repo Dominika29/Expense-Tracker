@@ -28,6 +28,7 @@ body {
     background-image: url('/static/images/background_pink.jpg') !important;
     background-size: cover;
     background-repeat: no-repeat;
+    padding-top: 80px;
 }
 
 .login-container {
@@ -205,4 +206,30 @@ form {
 .btn-secondary {
     margin-top: 10px;
     width: 100%;
+}
+
+.left-container {
+    width: 70%;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.right-container {
+    width: 25%;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.balance-container {
+    text-align: center;
+}
+
+.balance-container p {
+    margin: 10px 0;
+    font-size: 18px;
+    color: #555;
 }
