@@ -239,6 +239,80 @@ def add_income():
 
     return redirect(url_for('dashboard'))
 
+@app.route('/income_history')
+def income_history():
+    if 'user_id' not in session:
+        flash('Please log in to view income history.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    conn = get_db_connection()
+    
+    try:
+        incomes = conn.execute(
+            'SELECT id, amount, description, date FROM income WHERE user_id = ? ORDER BY date DESC',
+            (user_id,)
+        ).fetchall()
+    except sqlite3.Error as e:
+        flash('An error occurred while fetching income history.', 'error')
+        incomes = []
+    finally:
+        conn.close()
+    
+    return render_template('income_history.html', incomes=incomes)
+
+@app.route('/edit_income/<int:income_id>', methods=['GET', 'POST'])
+def edit_income(income_id):
+    if 'user_id' not in session:
+        flash('Please log in to edit income.', 'error')
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    income = conn.execute(
+        'SELECT * FROM income WHERE id = ? AND user_id = ?',
+        (income_id, session['user_id'])
+    ).fetchone()
+
+    if request.method == 'POST':
+        amount = float(request.form['amount'])
+        description = request.form['description']
+        date = request.form['date']
+
+        try:
+            conn.execute(
+                'UPDATE income SET amount = ?, description = ?, date = ? WHERE id = ?',
+                (amount, description, date, income_id)
+            )
+            conn.commit()
+            flash('Income updated successfully!', 'success')
+            return redirect(url_for('income_history'))
+        except sqlite3.Error as e:
+            flash('An error occurred while updating income.', 'error')
+        finally:
+            conn.close()
+    
+    return render_template('edit_income.html', income=income)
+
+@app.route('/delete_income/<int:income_id>', methods=['POST'])
+def delete_income(income_id):
+    if 'user_id' not in session:
+        flash('Please log in to delete income.', 'error')
+        return redirect(url_for('index'))
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            'DELETE FROM income WHERE id = ? AND user_id = ?',
+            (income_id, session['user_id'])
+        )
+        conn.commit()
+        flash('Income deleted successfully!', 'success')
+    except sqlite3.Error as e:
+        flash('An error occurred while deleting income.', 'error')
+    finally:
+        conn.close()
+
+    return redirect(url_for('income_history'))
 
         
 if __name__ == '__main__':

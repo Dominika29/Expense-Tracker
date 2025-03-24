@@ -235,3 +235,20 @@ form {
     margin-top: 10px;
     width: 100%;
 }
+
+.btn-history {
+    margin-top: 10px;
+    width: 100%;
+    background-color: #d595aa !important;
+}
+
+.history-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-top: 50px;
+    text-align: center;
+}
