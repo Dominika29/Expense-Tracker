@@ -1,6 +1,10 @@
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
+import io
+import base64
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 def get_db_connection():
     conn = sqlite3.connect('expense_tracker.db')
@@ -9,6 +13,8 @@ def get_db_connection():
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
+# basic routes
 
 @app.route("/")
 def index():
@@ -58,6 +64,45 @@ def register():
         conn.close()
     return redirect(url_for('index'))
 
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        flash('Please log in to access the dashboard.', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session['user_id']
+    conn = get_db_connection()
+
+    incomes = conn.execute('SELECT SUM(amount) AS total_income FROM income WHERE user_id = ?', (user_id,)).fetchone()
+    total_income = incomes['total_income'] or 0  
+
+    expenses = conn.execute('SELECT SUM(amount) AS total_expenses FROM expenses WHERE user_id = ?', (user_id,)).fetchone()
+    total_expenses = expenses['total_expenses'] or 0 
+
+    current_balance = total_income - total_expenses
+
+    expenses_list = conn.execute('''
+        SELECT expenses.id, expenses.amount, expenses.description, expenses.date, 
+               categories.name AS category
+        FROM expenses
+        JOIN categories ON expenses.category_id = categories.id
+        WHERE expenses.user_id = ?
+        ORDER BY expenses.date ASC
+    ''', (user_id,)).fetchall()
+    
+    categories = conn.execute('SELECT * FROM categories WHERE user_id = ?', (user_id,)).fetchall()
+    
+    conn.close()
+    
+    return render_template('dashboard.html', 
+                           expenses=expenses_list, 
+                           categories=categories, 
+                           total_income=total_income, 
+                           total_expenses=total_expenses, 
+                           current_balance=current_balance)
+
+# expenses
+
 @app.route('/add_expense', methods=['POST'])
 def add_expense():
     if 'user_id' not in session:
@@ -102,43 +147,6 @@ def add_expense():
     finally:
         conn.close()
     return redirect(url_for('dashboard'))
-
-@app.route('/dashboard')
-def dashboard():
-    if 'user_id' not in session:
-        flash('Please log in to access the dashboard.', 'error')
-        return redirect(url_for('index'))
-    
-    user_id = session['user_id']
-    conn = get_db_connection()
-
-    incomes = conn.execute('SELECT SUM(amount) AS total_income FROM income WHERE user_id = ?', (user_id,)).fetchone()
-    total_income = incomes['total_income'] or 0  
-
-    expenses = conn.execute('SELECT SUM(amount) AS total_expenses FROM expenses WHERE user_id = ?', (user_id,)).fetchone()
-    total_expenses = expenses['total_expenses'] or 0 
-
-    current_balance = total_income - total_expenses
-
-    expenses_list = conn.execute('''
-        SELECT expenses.id, expenses.amount, expenses.description, expenses.date, 
-               categories.name AS category
-        FROM expenses
-        JOIN categories ON expenses.category_id = categories.id
-        WHERE expenses.user_id = ?
-        ORDER BY expenses.date ASC
-    ''', (user_id,)).fetchall()
-    
-    categories = conn.execute('SELECT * FROM categories WHERE user_id = ?', (user_id,)).fetchall()
-    
-    conn.close()
-    
-    return render_template('dashboard.html', 
-                           expenses=expenses_list, 
-                           categories=categories, 
-                           total_income=total_income, 
-                           total_expenses=total_expenses, 
-                           current_balance=current_balance)
 
 @app.route('/delete_expense/<int:expense_id>', methods=['POST'])
 def delete_expense(expense_id):
@@ -212,6 +220,8 @@ def edit_expense(expense_id):
             flash('Expense not found or you do not have permission to edit it.', 'error')
             return redirect(url_for('dashboard'))
         
+# income
+        
 @app.route('/add_income', methods=['POST'])
 def add_income():
     if 'user_id' not in session:
@@ -253,13 +263,71 @@ def income_history():
             'SELECT id, amount, description, date FROM income WHERE user_id = ? ORDER BY date DESC',
             (user_id,)
         ).fetchall()
+
+        monthly_data = conn.execute('''
+            SELECT 
+                strftime('%Y-%m', i.date) AS month,
+                SUM(i.amount) AS total_income,
+                COALESCE(SUM(e.amount), 0) AS total_expense,
+                SUM(i.amount) - COALESCE(SUM(e.amount), 0) AS balance
+            FROM income i
+            LEFT JOIN (
+                SELECT strftime('%Y-%m', date) AS month, SUM(amount) AS amount 
+                FROM expenses 
+                WHERE user_id = ?
+                GROUP BY strftime('%Y-%m', date)
+            ) e ON strftime('%Y-%m', i.date) = e.month
+            WHERE i.user_id = ?
+            GROUP BY strftime('%Y-%m', i.date)
+            ORDER BY month ASC
+        ''', (user_id, user_id)).fetchall()
+        
+        fig = Figure(figsize=(12, 7), dpi=100)
+        axis = fig.add_subplot(1, 1, 1)
+        line_width = 3
+        marker_size = 8
+        
+        months = [row['month'] for row in monthly_data]
+        incomes_data = [float(row['total_income']) for row in monthly_data]
+        expenses_data = [float(row['total_expense']) for row in monthly_data]
+        balances = [float(row['balance']) for row in monthly_data]
+        
+        axis.plot(months, incomes_data, label='Income', 
+                marker='o', markersize=marker_size, 
+                linewidth=line_width, color='#2ecc71')
+        axis.plot(months, expenses_data, label='Expenses', 
+                marker='s', markersize=marker_size, 
+                linewidth=line_width, color='#e74c3c')
+        axis.plot(months, balances, label='Balance', 
+                marker='D', markersize=marker_size, 
+                linewidth=line_width, color='#3498db')
+        
+        axis.grid(True, linestyle='--', alpha=0.7)
+        axis.set_axisbelow(True)
+        
+        axis.set_title('Monthly Financial Summary', pad=20, fontsize=14, fontweight='bold')
+        axis.set_xlabel('Month', labelpad=10)
+        axis.set_ylabel('Amount', labelpad=10)
+        axis.legend(framealpha=1, shadow = True, loc='upper left')
+        axis.grid(True)
+        axis.tick_params(axis='x', rotation=45)
+        fig.tight_layout(pad = 3.0)
+        axis.fill_between(months, balances, alpha=0.2, color='#3498db')
+        
+        output = io.BytesIO()
+        FigureCanvas(fig).print_png(output)
+        plot_url = base64.b64encode(output.getvalue()).decode('utf-8')
+
     except sqlite3.Error as e:
         flash('An error occurred while fetching income history.', 'error')
         incomes = []
+        plot_url = None
     finally:
         conn.close()
     
-    return render_template('income_history.html', incomes=incomes)
+    return render_template('income_history.html',
+                           incomes = incomes,
+                           plot_url = plot_url)
 
 @app.route('/edit_income/<int:income_id>', methods=['GET', 'POST'])
 def edit_income(income_id):
